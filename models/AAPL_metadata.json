@@ -1,0 +1,9 @@
+{
+    "ticker": "AAPL",
+    "period": "5y",
+    "sequence_length": 60,
+    "num_features": 9,
+    "test_loss": 0.002972035901620984,
+    "test_mae": 0.03978726640343666,
+    "trained_on": "2026-01-26 22:38:46"
+}
