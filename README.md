@@ -1,62 +1,102 @@
-# Stock Market Predictor 📈
+# NeuroStock - AI Stock Predictor 📈
 
-A highly effective stock market prediction system using LSTM (Long Short-Term Memory) neural networks to forecast future stock prices based on historical data and technical indicators.
+A futuristic, AI-powered stock market prediction system. It combines a robust LSTM (Long Short-Term Memory) neural network backend with a sleek, cyberpunk-themed React frontend to forecast stock prices and visualize market trends.
 
-## Features
+![alt text](image.png)
 
-- **Historical Data Fetching**: Automatically downloads stock data using `yfinance`
-- **Technical Indicators**: Includes SMA, EMA, RSI, and MACD for enhanced predictions
-- **LSTM Model**: Deep learning architecture optimized for time-series forecasting
-- **Visualization**: Beautiful charts showing actual vs predicted prices
-- **Modular Design**: Easy to train on different stocks and timeframes
+![alt text](image-1.png)
 
-## Installation
+## ✨ Features
 
-1. Create a virtual environment:
-```bash
-python -m venv venv
-venv\Scripts\activate  # On Windows
-```
+### 🚀 Frontend (New)
+- **Futuristic UI**: "NeuroStock" cyberpunk design with glassmorphism and neon accents.
+- **Interactive Charts**: Dynamic Area Charts using `recharts` to visualize historical vs. predicted data.
+- **3D Background**: Immersive particle starfield using Three.js / React Three Fiber.
+- **Real-time Data**: Connects to the Flask API to fetch live 300-day rolling predictions.
 
+### 🧠 Backend (Enhanced)
+- **Flask API**: Exposes prediction logic via REST endpoints (`/predict`).
+- **Deep Learning**: LSTM model optimized for time-series forecasting.
+- **Technical Indicators**: Calculates SMA, EMA, RSI, and MACD for inputs.
+- **Robust Data Handling**: Validates `yfinance` data types for stability.
+
+## 🛠️ Tech Stack
+- **Frontend**: React, Vite, TailwindCSS v3, Framer Motion, Recharts, Three.js
+- **Backend**: Python 3.13, Flask, TensorFlow/Keras, Pandas, Numpy, Yfinance
+
+## 📦 Installation
+
+### Prerequisites
+- Python 3.10+ (Tested on 3.13)
+- Node.js & npm
+
+### 1. Backend Setup
+1. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   ```
 2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Start the Flask Server:
+   ```bash
+   python src/app.py
+   ```
+   *Server runs at: http://localhost:5000*
 
-## Usage
+### 2. Frontend Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Development Server:
+   ```bash
+   npm run dev
+   ```
+   *App runs at: http://localhost:5173*
 
-### Training the Model
-```bash
-python src/train.py
-```
+## 🚀 Usage
 
-### Making Predictions
-```bash
-python src/predict.py
-```
+1. **Train Model** (Optional):
+   The system comes with a pre-trained model for AAPL. To train on a new stock:
+   ```bash
+   # In the root directory
+   python src/train.py
+   # Note: Edit src/train.py to change the ticker symbol before running.
+   ```
 
-## Project Structure
+2. **Predict**:
+   - Open [http://localhost:5173](http://localhost:5173).
+   - Enter a stock symbol (e.g., `NVDA`, `TSLA`).
+   - Select prediction horizon (3, 7, 14, 30 days).
+   - View the forecast!
+
+## 📂 Project Structure
 
 ```
 stock_market prediction/
-├── src/
-│   ├── data_loader.py      # Fetch historical stock data
-│   ├── preprocessing.py    # Data cleaning and feature engineering
-│   ├── model.py           # LSTM model architecture
-│   ├── train.py           # Training pipeline
-│   └── predict.py         # Prediction and visualization
-├── models/                # Saved trained models
-├── requirements.txt       # Project dependencies
-└── README.md             # This file
+├── frontend/               # React + Vite Application
+│   ├── src/
+│   │   ├── components/     # UI Components (Charts, Cards, Input)
+│   │   ├── App.jsx         # Main Frontend Logic
+│   │   └── index.css       # Tailwind & Global Styles
+│   └── package.json        # Frontend Dependencies
+├── src/                    # Python Backend Source
+│   ├── app.py              # Flask API Entry Point
+│   ├── data_loader.py      # Stock Data Fetching (yfinance)
+│   ├── model.py            # LSTM Neural Network Definition
+│   ├── train.py            # Model Training Script
+│   └── predict.py          # Legacy CLI Prediction Script
+├── models/                 # Saved Models (.h5) & Scalers (.pkl)
+├── requirements.txt        # Backend Dependencies
+└── README.md               # Project Documentation
 ```
 
-## Technical Details
-
-- **Model**: LSTM with dropout layers for regularization
-- **Features**: Close price, SMA (20, 50), EMA (12, 26), RSI, MACD
-- **Sequence Length**: 60 days of historical data
-- **Normalization**: MinMaxScaler for feature scaling
-
-## Note
-
-⚠️ **Disclaimer**: This is a predictive model for educational purposes. Stock market predictions are inherently uncertain and should not be used as the sole basis for investment decisions.
+## ⚠️ Disclaimer
+This project is for educational purposes only. Stock market predictions are inherently uncertain. Do not use this tool for financial investment decisions.

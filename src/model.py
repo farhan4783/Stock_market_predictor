@@ -36,8 +36,11 @@ def create_lstm_model(input_shape: tuple, units: list = None, dropout_rate: floa
     
     model = Sequential()
     
+    # Input layer
+    model.add(keras.Input(shape=input_shape))
+    
     # First LSTM layer with return sequences
-    model.add(LSTM(units=units[0], return_sequences=True, input_shape=input_shape))
+    model.add(LSTM(units=units[0], return_sequences=True))
     model.add(Dropout(dropout_rate))
     
     # Second LSTM layer
