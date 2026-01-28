@@ -98,5 +98,19 @@ stock_market prediction/
 └── README.md               # Project Documentation
 ```
 
+
+## Key Upgrades
+1. Market Sentiment Engine
+What: A new "Fear & Greed" gauge on the dashboard.
+How: It analyzes (mocks) news sentiment to give a market score from -100 to 100.
+Visual: A speedometer-style gauge with live news ticker.
+2. Auto-Training Logic
+Problem: Previously, entering a new ticker like MSFT would crash/error if no model existed.
+Solution: The system now automatically detects missing models and triggers a rapid training session on the fly.
+Note: First request for a new stock will take ~30-60 seconds. Subsequent requests are instant.
+3. Pro-Level Charts
+What: Upgraded Prediction Chart.
+Details: Now clearly separates "Historical Data" (Blue) from "AI Forecast" (Purple) with a unified timeline and improved tooltips showing Open/High/Low/Close data.
+
 ## ⚠️ Disclaimer
 This project is for educational purposes only. Stock market predictions are inherently uncertain. Do not use this tool for financial investment decisions.

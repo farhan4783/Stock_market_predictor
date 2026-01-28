@@ -147,6 +147,8 @@ def train_model(ticker: str = "AAPL", period: str = "5y",
     print(f"📁 Metadata saved: {metadata_path}")
     print(f"📁 Training plot: models/{ticker}_training_history.png")
     print("=" * 70)
+    
+    return metadata
 
 
 if __name__ == "__main__":

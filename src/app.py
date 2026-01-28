@@ -14,6 +14,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from data_loader import fetch_stock_data
 from preprocessing import add_technical_indicators, inverse_transform_predictions
 from model import load_trained_model
+from train import train_model
+from sentiment import get_market_sentiment
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -24,12 +27,21 @@ def get_prediction_data(ticker, days_ahead):
     """
     try:
         # Load metadata
+        # Load metadata
         metadata_path = f"models/{ticker}_metadata.json"
+        
+        # Auto-train if model doesn't exist
         if not os.path.exists(metadata_path):
-            return None, "Model not trained for this ticker"
+            print(f"⚠️ Model for {ticker} not found. Starting auto-training...")
+            try:
+                # Train with default parameters
+                train_model(ticker=ticker, epochs=20) # Lower epochs for speed
+            except Exception as e:
+                return None, f"Failed to auto-train model: {str(e)}"
         
         with open(metadata_path, 'r') as f:
             metadata = json.load(f)
+
         
         sequence_length = metadata['sequence_length']
         num_features = metadata['num_features']
@@ -105,7 +117,11 @@ def get_prediction_data(ticker, days_ahead):
                 
             historical_data.append({
                 "date": pd.to_datetime(date_val).strftime('%Y-%m-%d'),
-                "price": float(close_val)
+                "open": float(row['Open']) if not isinstance(row['Open'], pd.Series) else float(row['Open'].iloc[0]),
+                "high": float(row['High']) if not isinstance(row['High'], pd.Series) else float(row['High'].iloc[0]),
+                "low": float(row['Low']) if not isinstance(row['Low'], pd.Series) else float(row['Low'].iloc[0]),
+                "close": float(close_val), # Already handled above
+                "volume": int(row['Volume']) if not isinstance(row['Volume'], pd.Series) else int(row['Volume'].iloc[0])
             })
 
         return {
@@ -131,6 +147,18 @@ def predict():
         return jsonify({"error": error}), 400
         
     return jsonify(result)
+
+@app.route('/sentiment', methods=['POST'])
+def sentiment():
+    data = request.get_json()
+    ticker = data.get('ticker', 'AAPL')
+    
+    try:
+        result = get_market_sentiment(ticker)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 @app.route('/health', methods=['GET'])
 def health():

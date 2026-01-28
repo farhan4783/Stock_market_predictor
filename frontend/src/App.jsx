@@ -5,11 +5,13 @@ import Background from './components/Background';
 import StockInput from './components/StockInput';
 import StatsCard from './components/StatsCard';
 import PredictionChart from './components/PredictionChart';
+import SentimentGauge from './components/SentimentGauge';
 import { TrendingUp, DollarSign, Activity, AlertCircle } from 'lucide-react';
 
 function App() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
+  const [sentiment, setSentiment] = useState(null);
   const [error, setError] = useState(null);
   const [days, setDays] = useState(7);
 
@@ -19,11 +21,14 @@ function App() {
     setData(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/predict', {
-        ticker: ticker,
-        days: days
-      });
-      setData(response.data);
+      // Parallel requests for prediction and sentiment
+      const [predRes, sentRes] = await Promise.all([
+        axios.post('http://localhost:5000/predict', { ticker: ticker, days: days }),
+        axios.post('http://localhost:5000/sentiment', { ticker: ticker })
+      ]);
+
+      setData(predRes.data);
+      setSentiment(sentRes.data);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || "Failed to fetch prediction. Ensure model is trained.");
@@ -108,7 +113,21 @@ function App() {
                 />
               </div>
 
-              <PredictionChart data={data.historical} predictions={data.predictions} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div className="lg:col-span-2">
+                  <PredictionChart data={data.historical} predictions={data.predictions} />
+                </div>
+                <div className="lg:col-span-1">
+                  {sentiment && (
+                    <SentimentGauge
+                      score={sentiment.score}
+                      label={sentiment.label}
+                      color={sentiment.color}
+                      news={sentiment.news}
+                    />
+                  )}
+                </div>
+              </div>
 
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-dark-card/30 rounded-xl p-6 border border-white/5">
