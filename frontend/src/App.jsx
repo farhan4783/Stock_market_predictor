@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,11 +10,16 @@ import SentimentGauge from './components/SentimentGauge';
 import ThemeToggle from './components/ThemeToggle';
 import CommandPalette from './components/CommandPalette';
 import LoadingSkeleton from './components/LoadingSkeleton';
-import { TrendingUp, DollarSign, Activity, AlertCircle, Download } from 'lucide-react';
+import LearnerDashboard from './pages/Learner/LearnerDashboard';
+import ModulePage from './pages/Learner/ModulePage';
+import LessonPage from './pages/Learner/LessonPage';
+import QuizPage from './pages/Learner/QuizPage';
+import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap } from 'lucide-react';
 import { exportPredictionsToCSV, exportHistoricalToCSV } from './utils/exportCSV';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { Link } from 'react-router-dom';
 
-function App() {
+function HomePage() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [sentiment, setSentiment] = useState(null);
@@ -40,7 +46,6 @@ function App() {
     setData(null);
 
     try {
-      // Parallel requests for prediction and sentiment
       const [predRes, sentRes] = await Promise.all([
         axios.post('http://localhost:5000/predict', { ticker: ticker, days: days }),
         axios.post('http://localhost:5000/sentiment', { ticker: ticker })
@@ -88,6 +93,18 @@ function App() {
           <p className="text-gray-400 text-lg uppercase tracking-[0.3em] font-light">
             AI-Powered Market Intelligence
           </p>
+
+          {/* Learner Button */}
+          <Link to="/learner">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white font-bold shadow-lg hover:shadow-green-500/50 transition-all"
+            >
+              <GraduationCap className="w-5 h-5" />
+              Learn Stock Market
+            </motion.button>
+          </Link>
         </motion.div>
 
         <StockInput onSearch={handleSearch} loading={loading} inputRef={searchInputRef} />
@@ -150,7 +167,7 @@ function App() {
                   label="Predicted Change"
                   value={`${data.predictions[data.predictions.length - 1].change_percent.toFixed(2)}%`}
                   change={data.predictions[data.predictions.length - 1].change_percent}
-                  icon={TrendingUp} // Logic to swap icon could be added
+                  icon={TrendingUp}
                   delay={0.2}
                 />
                 <StatsCard
@@ -208,6 +225,20 @@ function App() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/learner" element={<LearnerDashboard />} />
+        <Route path="/learner/module/:moduleId" element={<ModulePage />} />
+        <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
+        <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
+      </Routes>
+    </Router>
   );
 }
 
