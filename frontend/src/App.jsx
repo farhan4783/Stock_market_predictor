@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import Background from './components/Background';
@@ -6,7 +6,12 @@ import StockInput from './components/StockInput';
 import StatsCard from './components/StatsCard';
 import PredictionChart from './components/PredictionChart';
 import SentimentGauge from './components/SentimentGauge';
-import { TrendingUp, DollarSign, Activity, AlertCircle } from 'lucide-react';
+import ThemeToggle from './components/ThemeToggle';
+import CommandPalette from './components/CommandPalette';
+import LoadingSkeleton from './components/LoadingSkeleton';
+import { TrendingUp, DollarSign, Activity, AlertCircle, Download } from 'lucide-react';
+import { exportPredictionsToCSV, exportHistoricalToCSV } from './utils/exportCSV';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -14,6 +19,20 @@ function App() {
   const [sentiment, setSentiment] = useState(null);
   const [error, setError] = useState(null);
   const [days, setDays] = useState(7);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const searchInputRef = useRef(null);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    '/': () => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    },
+    'ctrl+k': () => {
+      setCommandPaletteOpen(true);
+    }
+  });
 
   const handleSearch = async (ticker) => {
     setLoading(true);
@@ -37,17 +56,32 @@ function App() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (data) {
+      exportPredictionsToCSV(data, data.ticker);
+      exportHistoricalToCSV(data.historical, data.ticker);
+    }
+  };
+
+
   return (
-    <div className="min-h-screen text-white font-sans selection:bg-neon-blue selection:text-black relative overflow-hidden">
+    <div className="min-h-screen text-white dark:text-white light:text-gray-900 font-sans selection:bg-neon-blue selection:text-black relative overflow-hidden">
       <Background />
+      <ThemeToggle />
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onSearch={handleSearch}
+        onExportCSV={handleExportCSV}
+      />
 
       <div className="container mx-auto px-4 py-12 relative z-10">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-12"
-        >
+          className="text-center mb-12">
+
           <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-white to-neon-purple drop-shadow-[0_0_15px_rgba(0,243,255,0.5)] mb-4">
             NEUROSTOCK
           </h1>
@@ -56,7 +90,7 @@ function App() {
           </p>
         </motion.div>
 
-        <StockInput onSearch={handleSearch} loading={loading} />
+        <StockInput onSearch={handleSearch} loading={loading} inputRef={searchInputRef} />
 
         <div className="flex justify-center mb-8 gap-4">
           {[3, 7, 14, 30].map(d => (
@@ -71,6 +105,8 @@ function App() {
         </div>
 
         <AnimatePresence mode="wait">
+          {loading && <LoadingSkeleton />}
+
           {error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -83,13 +119,26 @@ function App() {
             </motion.div>
           )}
 
-          {data && (
+          {data && !loading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
               className="max-w-6xl mx-auto"
             >
+              {/* Export Button */}
+              <div className="flex justify-end mb-4">
+                <motion.button
+                  onClick={handleExportCSV}
+                  className="flex items-center gap-2 px-4 py-2 bg-neon-blue/10 hover:bg-neon-blue/20 border border-neon-blue/30 rounded-lg text-neon-blue transition-all duration-300 group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Download className="w-4 h-4 group-hover:animate-bounce" />
+                  <span className="font-medium">Export to CSV</span>
+                </motion.button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <StatsCard
                   label="Current Price"
