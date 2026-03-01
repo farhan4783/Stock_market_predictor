@@ -1,0 +1,68 @@
+# NeuroStock Platform Upgrade — Walkthrough
+
+## What Was Done
+
+### 🔧 Backend (`src/`)
+
+| File | Change |
+|---|---|
+| [app.py](file:///c:/Users/FARAZ%20KHAN/Desktop/DEKSTOP/PROJECTS/stock_market%20prediction/src/app.py) | Added `/market-overview`, `/compare`, `/watchlist-prices` endpoints |
+| [sentiment.py](file:///c:/Users/FARAZ%20KHAN/Desktop/DEKSTOP/PROJECTS/stock_market%20prediction/src/sentiment.py) | Added live RSI calculation + trend direction (`bullish`/`bearish`/`neutral`) via `yfinance` |
+
+### ⚛️ Frontend (`frontend/src/`)
+
+**New Files**
+| File | Purpose |
+|---|---|
+| `context/WatchlistContext.jsx` | Global watchlist state with `localStorage` persistence |
+| `components/NavBar.jsx` | Sticky top nav with logo, links, watchlist badge |
+| `components/MarketOverviewBar.jsx` | Scrolling live ticker bar (SPY, QQQ, DIA, BTC-USD…) |
+| `pages/WatchlistPage.jsx` | `/watchlist` — shows starred stocks with live prices |
+| `pages/ComparePage.jsx` | `/compare` — side-by-side prediction chart for 2 tickers |
+
+**Modified Files**
+| File | Change |
+|---|---|
+| `App.jsx` | Added `WatchlistProvider`, `NavBar`, `MarketOverviewBar`, star button, new routes |
+| `components/Background.jsx` | Changed particles from pink → neon-blue; added radial glow overlay |
+| `components/StatsCard.jsx` | Color-coded borders, bottom glow accent line on hover, arrow icons |
+| `components/StockInput.jsx` | Added AAPL/TSLA/NVDA/MSFT/AMZN quick-select pills |
+| `components/SentimentGauge.jsx` | Dynamic arc color, glowing needle, RSI badge, trend direction badge |
+| `components/PredictionChart.jsx` | Volume bar sub-chart, legend row |
+| `index.css` | `@keyframes marquee` for ticker bar, glow-pulse, cleaner scrollbar |
+
+---
+
+## Verification Results
+
+Build: ✅ `npm run build` → **Exit 0**, no errors.
+
+### Screenshots
+
+````carousel
+![Home Page — NavBar, pills, hero visible](C:\Users\FARAZ KHAN\.gemini\antigravity\brain\3bb06f1b-a51f-4ba4-9515-d082eef2a4a2\neurostock_home_page_1772357339847.png)
+<!-- slide -->
+![Watchlist Page — empty state, sticky nav](C:\Users\FARAZ KHAN\.gemini\antigravity\brain\3bb06f1b-a51f-4ba4-9515-d082eef2a4a2\neurostock_watchlist_page_1772357371857.png)
+<!-- slide -->
+![Compare Page — Stock A/B inputs, Compare button](C:\Users\FARAZ KHAN\.gemini\antigravity\brain\3bb06f1b-a51f-4ba4-9515-d082eef2a4a2\neurostock_compare_page_1772357381328.png)
+````
+
+> [!NOTE]
+> The Market Overview Bar requires the Flask backend to be running on port 5000. Start it with `.venv\Scripts\activate` then `python src/app.py` from the project root.
+
+---
+
+## How to Start
+
+```bash
+# Terminal 1 — Backend
+cd "c:\Users\FARAZ KHAN\Desktop\DEKSTOP\PROJECTS\stock_market prediction"
+.venv\Scripts\activate
+python src/app.py
+
+# Terminal 2 — Frontend
+cd frontend
+npm run dev
+```
+
+Open **http://localhost:5173**

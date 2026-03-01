@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #050505;
-  --bg-secondary: #0a0a0a;
+  --bg-primary: #030810;
+  --bg-secondary: #0a0a12;
   --text-primary: #ffffff;
   --text-secondary: #a0a0a0;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --card-bg: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --card-bg: rgba(255, 255, 255, 0.04);
 }
 
 .light {
@@ -33,18 +33,43 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #050505;
+  background: #050510;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #1a1a2e;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #00f3ff;
+}
+
+/* Marquee scrolling ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Glow pulse for positive cards */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0px rgba(52, 211, 153, 0); }
+  50% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.15); }
+}
+
+.glow-pulse-green {
+  animation: glow-pulse 2s ease-in-out infinite;
 }

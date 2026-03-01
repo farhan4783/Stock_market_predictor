@@ -10,11 +10,16 @@ import SentimentGauge from './components/SentimentGauge';
 import ThemeToggle from './components/ThemeToggle';
 import CommandPalette from './components/CommandPalette';
 import LoadingSkeleton from './components/LoadingSkeleton';
+import NavBar from './components/NavBar';
+import MarketOverviewBar from './components/MarketOverviewBar';
 import LearnerDashboard from './pages/Learner/LearnerDashboard';
 import ModulePage from './pages/Learner/ModulePage';
 import LessonPage from './pages/Learner/LessonPage';
 import QuizPage from './pages/Learner/QuizPage';
-import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap } from 'lucide-react';
+import WatchlistPage from './pages/WatchlistPage';
+import ComparePage from './pages/ComparePage';
+import { WatchlistProvider, useWatchlist } from './context/WatchlistContext';
+import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap, Star } from 'lucide-react';
 import { exportPredictionsToCSV, exportHistoricalToCSV } from './utils/exportCSV';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { Link } from 'react-router-dom';
@@ -27,35 +32,27 @@ function HomePage() {
   const [days, setDays] = useState(7);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const searchInputRef = useRef(null);
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
 
-  // Keyboard shortcuts
   useKeyboardShortcuts({
-    '/': () => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    },
-    'ctrl+k': () => {
-      setCommandPaletteOpen(true);
-    }
+    '/': () => { if (searchInputRef.current) searchInputRef.current.focus(); },
+    'ctrl+k': () => setCommandPaletteOpen(true),
   });
 
   const handleSearch = async (ticker) => {
     setLoading(true);
     setError(null);
     setData(null);
-
     try {
       const [predRes, sentRes] = await Promise.all([
-        axios.post('http://localhost:5000/predict', { ticker: ticker, days: days }),
-        axios.post('http://localhost:5000/sentiment', { ticker: ticker })
+        axios.post('http://localhost:5000/predict', { ticker, days }),
+        axios.post('http://localhost:5000/sentiment', { ticker }),
       ]);
-
       setData(predRes.data);
       setSentiment(sentRes.data);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "Failed to fetch prediction. Ensure model is trained.");
+      setError(err.response?.data?.error || 'Failed to fetch prediction. Ensure model is trained.');
     } finally {
       setLoading(false);
     }
@@ -68,9 +65,10 @@ function HomePage() {
     }
   };
 
+  const tickerStarred = data ? isInWatchlist(data.ticker) : false;
 
   return (
-    <div className="min-h-screen text-white dark:text-white light:text-gray-900 font-sans selection:bg-neon-blue selection:text-black relative overflow-hidden">
+    <div className="min-h-screen text-white font-sans selection:bg-neon-blue selection:text-black relative overflow-hidden">
       <Background />
       <ThemeToggle />
       <CommandPalette
@@ -80,28 +78,32 @@ function HomePage() {
         onExportCSV={handleExportCSV}
       />
 
-      <div className="container mx-auto px-4 py-12 relative z-10">
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12">
+      {/* Market Overview Bar — right below fixed NavBar */}
+      <div className="pt-14">
+        <MarketOverviewBar />
+      </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-white to-neon-purple drop-shadow-[0_0_15px_rgba(0,243,255,0.5)] mb-4">
+      <div className="container mx-auto px-4 py-10 relative z-10">
+        {/* Hero */}
+        <motion.div
+          initial={{ y: -40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-10"
+        >
+          <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-white to-neon-purple drop-shadow-[0_0_15px_rgba(0,243,255,0.5)] mb-3">
             NEUROSTOCK
           </h1>
-          <p className="text-gray-400 text-lg uppercase tracking-[0.3em] font-light">
+          <p className="text-gray-400 text-base uppercase tracking-[0.3em] font-light mb-5">
             AI-Powered Market Intelligence
           </p>
-
-          {/* Learner Button */}
           <Link to="/learner">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white font-bold shadow-lg hover:shadow-green-500/50 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white font-bold shadow-lg hover:shadow-green-500/50 transition-all text-sm"
             >
-              <GraduationCap className="w-5 h-5" />
+              <GraduationCap className="w-4 h-4" />
               Learn Stock Market
             </motion.button>
           </Link>
@@ -109,14 +111,17 @@ function HomePage() {
 
         <StockInput onSearch={handleSearch} loading={loading} inputRef={searchInputRef} />
 
-        <div className="flex justify-center mb-8 gap-4">
+        {/* Day selector */}
+        <div className="flex justify-center mb-8 gap-3">
           {[3, 7, 14, 30].map(d => (
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`px-4 py-2 rounded-full border border-white/10 text-sm transition-all duration-300 ${days === d ? 'bg-neon-blue text-black font-bold shadow-[0_0_10px_#00f3ff]' : 'bg-transparent text-gray-400 hover:text-white hover:border-white/30'}`}
+              className={`px-4 py-1.5 rounded-full border text-sm transition-all duration-300 ${days === d
+                ? 'bg-neon-blue text-black font-bold shadow-[0_0_10px_#00f3ff] border-neon-blue'
+                : 'bg-transparent text-gray-400 hover:text-white border-white/10 hover:border-white/30'}`}
             >
-              {d} Days
+              {d}d
             </button>
           ))}
         </div>
@@ -143,20 +148,33 @@ function HomePage() {
               transition={{ duration: 0.5 }}
               className="max-w-6xl mx-auto"
             >
-              {/* Export Button */}
-              <div className="flex justify-end mb-4">
+              {/* Action Row */}
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black font-mono text-white">{data.ticker}</span>
+                  <motion.button
+                    onClick={() => tickerStarred ? removeFromWatchlist(data.ticker) : addToWatchlist(data.ticker)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className={`p-1.5 rounded-lg transition-all ${tickerStarred ? 'text-yellow-400 bg-yellow-400/10' : 'text-gray-500 hover:text-yellow-400 hover:bg-yellow-400/10'}`}
+                    title={tickerStarred ? 'Remove from watchlist' : 'Add to watchlist'}
+                  >
+                    <Star className={`w-5 h-5 ${tickerStarred ? 'fill-yellow-400' : ''}`} />
+                  </motion.button>
+                </div>
                 <motion.button
                   onClick={handleExportCSV}
-                  className="flex items-center gap-2 px-4 py-2 bg-neon-blue/10 hover:bg-neon-blue/20 border border-neon-blue/30 rounded-lg text-neon-blue transition-all duration-300 group"
+                  className="flex items-center gap-2 px-4 py-2 bg-neon-blue/10 hover:bg-neon-blue/20 border border-neon-blue/30 rounded-lg text-neon-blue transition-all duration-300 group text-sm"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Download className="w-4 h-4 group-hover:animate-bounce" />
-                  <span className="font-medium">Export to CSV</span>
+                  Export CSV
                 </motion.button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
                 <StatsCard
                   label="Current Price"
                   value={`$${data.current_price.toFixed(2)}`}
@@ -173,13 +191,14 @@ function HomePage() {
                 <StatsCard
                   label="Model Accuracy (MAE)"
                   value={data.metadata.test_mae.toFixed(4)}
-                  subValue={`Based on ${data.metadata.sequence_length} days`}
+                  subValue={`${data.metadata.sequence_length}d window`}
                   icon={Activity}
                   delay={0.3}
                 />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              {/* Chart + Sentiment */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mb-7">
                 <div className="lg:col-span-2">
                   <PredictionChart data={data.historical} predictions={data.predictions} />
                 </div>
@@ -190,20 +209,23 @@ function HomePage() {
                       label={sentiment.label}
                       color={sentiment.color}
                       news={sentiment.news}
+                      rsi={sentiment.rsi}
+                      trend={sentiment.trend}
                     />
                   )}
                 </div>
               </div>
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Prediction Details + Model Insights */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-dark-card/30 rounded-xl p-6 border border-white/5">
-                  <h3 className="text-neon-blue font-bold mb-4 uppercase tracking-wider text-sm">Prediction Details</h3>
-                  <div className="space-y-3">
+                  <h3 className="text-neon-blue font-bold mb-4 uppercase tracking-wider text-xs">Prediction Details</h3>
+                  <div className="space-y-2.5">
                     {data.predictions.map((pred, i) => (
                       <div key={i} className="flex justify-between items-center border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                        <span className="text-gray-400 font-mono">{pred.date}</span>
-                        <span className="text-white font-bold">${pred.price.toFixed(2)}</span>
-                        <span className={`text-xs ${pred.change_percent >= 0 ? 'text-neon-green' : 'text-red-400'}`}>
+                        <span className="text-gray-400 font-mono text-sm">{pred.date}</span>
+                        <span className="text-white font-bold font-mono">${pred.price.toFixed(2)}</span>
+                        <span className={`text-xs font-bold ${pred.change_percent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           {pred.change_percent >= 0 ? '+' : ''}{pred.change_percent.toFixed(2)}%
                         </span>
                       </div>
@@ -211,13 +233,22 @@ function HomePage() {
                   </div>
                 </div>
                 <div className="bg-dark-card/30 rounded-xl p-6 border border-white/5">
-                  <h3 className="text-neon-purple font-bold mb-4 uppercase tracking-wider text-sm">Model Insights</h3>
+                  <h3 className="text-neon-purple font-bold mb-4 uppercase tracking-wider text-xs">Model Insights</h3>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                    This prediction is generated using a Long Short-Term Memory (LSTM) neural network, trained on historical data.
-                    The model analyzes patterns over the last {data.metadata.sequence_length} days to forecast future trends.
-                    <br /><br />
-                    <span className="text-white/50 text-xs">Note: Predictions are for educational purposes only.</span>
+                    This prediction is generated using an LSTM neural network, trained on historical OHLCV data with technical indicators.
+                    The model analyzes patterns over the last <span className="text-white/70">{data.metadata.sequence_length} days</span> to forecast future trends.
                   </p>
+                  <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <div className="text-gray-600 uppercase tracking-wider">Training MAE</div>
+                      <div className="text-white font-mono">{data.metadata.test_mae?.toFixed(4)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 uppercase tracking-wider">Sequence</div>
+                      <div className="text-white font-mono">{data.metadata.sequence_length}d</div>
+                    </div>
+                  </div>
+                  <p className="text-white/30 text-xs mt-4">⚠ For educational purposes only.</p>
                 </div>
               </div>
             </motion.div>
@@ -230,15 +261,20 @@ function HomePage() {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/learner" element={<LearnerDashboard />} />
-        <Route path="/learner/module/:moduleId" element={<ModulePage />} />
-        <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
-        <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
-      </Routes>
-    </Router>
+    <WatchlistProvider>
+      <Router>
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/learner" element={<LearnerDashboard />} />
+          <Route path="/learner/module/:moduleId" element={<ModulePage />} />
+          <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
+          <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
+        </Routes>
+      </Router>
+    </WatchlistProvider>
   );
 }
 

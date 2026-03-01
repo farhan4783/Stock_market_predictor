@@ -17,7 +17,7 @@ function Stars(props) {
             <Points ref={ref} positions={sphere} stride={3} frustumCulled={false} {...props}>
                 <PointMaterial
                     transparent
-                    color="#f272c8"
+                    color="#00d4ff"
                     size={0.002}
                     sizeAttenuation={true}
                     depthWrite={false}
@@ -29,12 +29,14 @@ function Stars(props) {
 
 const Background = () => {
     return (
-        <div className="fixed inset-0 z-[-1] bg-black">
+        <div className="fixed inset-0 z-[-1] bg-[#030810]">
             <Canvas camera={{ position: [0, 0, 1] }}>
                 <Suspense fallback={null}>
                     <Stars />
                 </Suspense>
             </Canvas>
+            {/* Radial glow at center */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,100,180,0.08)_0%,_transparent_70%)] pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" />
         </div>
     );

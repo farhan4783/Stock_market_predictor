@@ -7,6 +7,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
+import yfinance as yf
 
 # Add src to path to import local modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -27,14 +28,12 @@ def get_prediction_data(ticker, days_ahead):
     """
     try:
         # Load metadata
-        # Load metadata
         metadata_path = f"models/{ticker}_metadata.json"
         
         # Auto-train if model doesn't exist
         if not os.path.exists(metadata_path):
             print(f"⚠️ Model for {ticker} not found. Starting auto-training...")
             try:
-                # Train with default parameters
                 train_model(ticker=ticker, epochs=20) # Lower epochs for speed
             except Exception as e:
                 return None, f"Failed to auto-train model: {str(e)}"
@@ -120,7 +119,7 @@ def get_prediction_data(ticker, days_ahead):
                 "open": float(row['Open']) if not isinstance(row['Open'], pd.Series) else float(row['Open'].iloc[0]),
                 "high": float(row['High']) if not isinstance(row['High'], pd.Series) else float(row['High'].iloc[0]),
                 "low": float(row['Low']) if not isinstance(row['Low'], pd.Series) else float(row['Low'].iloc[0]),
-                "close": float(close_val), # Already handled above
+                "close": float(close_val),
                 "volume": int(row['Volume']) if not isinstance(row['Volume'], pd.Series) else int(row['Volume'].iloc[0])
             })
 
@@ -158,6 +157,76 @@ def sentiment():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
+@app.route('/market-overview', methods=['GET'])
+def market_overview():
+    """Returns live price and daily change for major indices."""
+    symbols = ['SPY', 'QQQ', 'DIA', 'BTC-USD', 'AAPL', 'NVDA', 'TSLA', 'MSFT']
+    result = []
+    try:
+        for sym in symbols:
+            try:
+                ticker_obj = yf.Ticker(sym)
+                info = ticker_obj.fast_info
+                current = float(info.last_price) if info.last_price else 0.0
+                prev_close = float(info.previous_close) if info.previous_close else current
+                change_pct = ((current - prev_close) / prev_close * 100) if prev_close else 0.0
+                result.append({
+                    "symbol": sym,
+                    "price": round(current, 2),
+                    "change_percent": round(change_pct, 2)
+                })
+            except Exception:
+                result.append({"symbol": sym, "price": 0.0, "change_percent": 0.0})
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/compare', methods=['POST'])
+def compare():
+    """Returns predictions for two tickers for comparison."""
+    data = request.get_json()
+    ticker1 = data.get('ticker1', 'AAPL').upper()
+    ticker2 = data.get('ticker2', 'MSFT').upper()
+    days = int(data.get('days', 7))
+
+    result1, err1 = get_prediction_data(ticker1, days)
+    result2, err2 = get_prediction_data(ticker2, days)
+
+    if err1:
+        return jsonify({"error": f"{ticker1}: {err1}"}), 400
+    if err2:
+        return jsonify({"error": f"{ticker2}: {err2}"}), 400
+
+    return jsonify({
+        "ticker1": result1,
+        "ticker2": result2
+    })
+
+
+@app.route('/watchlist-prices', methods=['POST'])
+def watchlist_prices():
+    """Batch fetch current prices for a list of tickers."""
+    data = request.get_json()
+    tickers = data.get('tickers', [])
+    result = []
+    for sym in tickers:
+        try:
+            ticker_obj = yf.Ticker(sym)
+            info = ticker_obj.fast_info
+            current = float(info.last_price) if info.last_price else 0.0
+            prev_close = float(info.previous_close) if info.previous_close else current
+            change_pct = ((current - prev_close) / prev_close * 100) if prev_close else 0.0
+            result.append({
+                "symbol": sym,
+                "price": round(current, 2),
+                "change_percent": round(change_pct, 2)
+            })
+        except Exception:
+            result.append({"symbol": sym, "price": 0.0, "change_percent": 0.0})
+    return jsonify(result)
 
 
 @app.route('/health', methods=['GET'])

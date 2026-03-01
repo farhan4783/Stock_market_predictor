@@ -1,0 +1,9 @@
+{
+    "ticker": "GOOGL",
+    "period": "5y",
+    "sequence_length": 60,
+    "num_features": 9,
+    "test_loss": 0.004613060969859362,
+    "test_mae": 0.05167918652296066,
+    "trained_on": "2026-03-01 14:46:21"
+}
