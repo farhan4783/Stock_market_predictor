@@ -8,17 +8,17 @@ All broken features have been fixed and new features have been added to the NEUR
 
 ## Screenshots
 
-![home_page_initial_1772732470500.png]
+![home page](home_page_initial_1772732470500.png)
 *Home page: NavBar with Home, Watchlist, Compare, Learn. Search bar with popular stock pills. Day selector (3d/7d/14d/30d).*
 
-![learner_dashboard_top_1772732539025.png]
+![learner dashboard](learner_dashboard_top_1772732539025.png)
 *Learner Dashboard: XP progress bars, Module 1 (Stock Market Basics) unlocked, Modules 2 & 3 locked.*
 
 ---
 
 ## 🎬 Browser Recording
 
-![neurostock_full_verification_1772732430111.webp]
+![video](neurostock_full_verification_1772732430111.webp)
 
 ---
 
