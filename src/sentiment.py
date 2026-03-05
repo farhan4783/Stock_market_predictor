@@ -1,11 +1,11 @@
 """
 Sentiment Analysis Module
-Provides market sentiment analysis using a mock engine (simulated data).
-In a production environment, this would connect to NewsAPI or similar.
+Provides market sentiment analysis. Uses real yfinance news when available,
+falling back to deterministic mock data.
 """
 
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 import yfinance as yf
 
 def get_market_sentiment(ticker: str) -> dict:
@@ -45,29 +45,53 @@ def get_market_sentiment(ticker: str) -> dict:
         label = "Extreme Fear"
         color = "red"
 
-    # Generate mock news
-    templates = [
-        f"Analysts upgrade {ticker} following strong earnings report",
-        f"{ticker} announces new AI initiative",
-        f"Market uncertainty affects {ticker} stock price",
-        f"{ticker} CEO to speak at upcoming tech conference",
-        f"Investors watching {ticker} closely this week",
-        f"Why {ticker} could be the next big mover",
-        f"{ticker} faces regulatory scrutiny in EU",
-        f"Tech sector rally boosts {ticker}",
-        f"Supply chain issues may impact {ticker} growth",
-        f"{ticker} launches new product line"
-    ]
-
+    # Try to fetch real news from yfinance
     news = []
-    headlines = random.sample(templates, 3)
-    for headline in headlines:
-        news.append({
-            "title": headline,
-            "source": random.choice(["TechDaily", "MarketWatch", "Bloomberg", "Reuters", "CNBC"]),
-            "time": f"{random.randint(1, 23)}h ago",
-            "url": "#"
-        })
+    try:
+        ticker_obj_news = yf.Ticker(ticker)
+        raw_news = ticker_obj_news.news or []
+        for item in raw_news[:5]:
+            content = item.get('content', {})
+            title = content.get('title') or item.get('title', '')
+            if not title:
+                continue
+            provider = content.get('provider', {}) or {}
+            source = provider.get('displayName', 'Market News')
+            pub_date = content.get('pubDate', '') or item.get('providerPublishTime', '')
+            # Format time as relative
+            time_str = 'recently'
+            try:
+                import time as _time
+                if isinstance(pub_date, (int, float)):
+                    diff_hours = int((_time.time() - pub_date) / 3600)
+                    time_str = f"{diff_hours}h ago" if diff_hours < 48 else f"{diff_hours // 24}d ago"
+            except Exception:
+                pass
+            link = content.get('canonicalUrl', {}) or {}
+            url = link.get('url', '#') if isinstance(link, dict) else '#'
+            news.append({"title": title, "source": source, "time": time_str, "url": url})
+    except Exception:
+        pass
+
+    # Fall back to mock news if nothing real found
+    if not news:
+        templates = [
+            f"Analysts upgrade {ticker} following strong earnings report",
+            f"{ticker} announces new AI initiative",
+            f"Market uncertainty affects {ticker} stock price",
+            f"{ticker} CEO to speak at upcoming tech conference",
+            f"Investors watching {ticker} closely this week",
+            f"Why {ticker} could be the next big mover",
+            f"{ticker} faces regulatory scrutiny in EU",
+            f"Tech sector rally boosts {ticker}",
+        ]
+        for headline in random.sample(templates, 3):
+            news.append({
+                "title": headline,
+                "source": random.choice(["MarketWatch", "Bloomberg", "Reuters", "CNBC"]),
+                "time": f"{random.randint(1, 23)}h ago",
+                "url": "#"
+            })
 
     # Compute live RSI and trend from yfinance
     rsi = None

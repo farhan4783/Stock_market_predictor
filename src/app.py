@@ -229,6 +229,45 @@ def watchlist_prices():
     return jsonify(result)
 
 
+@app.route('/stock-info', methods=['GET'])
+def stock_info():
+    """Returns company metadata: name, sector, market cap, PE, 52w high/low."""
+    ticker = request.args.get('ticker', 'AAPL').upper()
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info or {}
+        fast = t.fast_info
+
+        def safe(val, default='N/A'):
+            return val if val is not None else default
+
+        def fmt_cap(val):
+            if val is None:
+                return 'N/A'
+            if val >= 1e12:
+                return f'${val/1e12:.2f}T'
+            if val >= 1e9:
+                return f'${val/1e9:.2f}B'
+            if val >= 1e6:
+                return f'${val/1e6:.2f}M'
+            return f'${val:,.0f}'
+
+        return jsonify({
+            'ticker': ticker,
+            'name': safe(info.get('longName') or info.get('shortName')),
+            'sector': safe(info.get('sector')),
+            'industry': safe(info.get('industry')),
+            'market_cap': fmt_cap(info.get('marketCap') or getattr(fast, 'market_cap', None)),
+            'pe_ratio': round(float(info['trailingPE']), 2) if info.get('trailingPE') else 'N/A',
+            'fifty_two_week_high': round(float(getattr(fast, 'year_high', 0) or 0), 2),
+            'fifty_two_week_low': round(float(getattr(fast, 'year_low', 0) or 0), 2),
+            'dividend_yield': f"{round(float(info['dividendYield']) * 100, 2)}%" if info.get('dividendYield') else 'N/A',
+            'description': (info.get('longBusinessSummary') or '')[:300]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy"})

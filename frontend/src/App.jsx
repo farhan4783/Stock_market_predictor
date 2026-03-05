@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import Background from './components/Background';
@@ -12,10 +13,12 @@ import CommandPalette from './components/CommandPalette';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import NavBar from './components/NavBar';
 import MarketOverviewBar from './components/MarketOverviewBar';
+import StockInfoCard from './components/StockInfoCard';
 import LearnerDashboard from './pages/Learner/LearnerDashboard';
 import ModulePage from './pages/Learner/ModulePage';
 import LessonPage from './pages/Learner/LessonPage';
 import QuizPage from './pages/Learner/QuizPage';
+import VirtualTradingPage from './pages/Learner/VirtualTradingPage';
 import WatchlistPage from './pages/WatchlistPage';
 import ComparePage from './pages/ComparePage';
 import { WatchlistProvider, useWatchlist } from './context/WatchlistContext';
@@ -31,8 +34,10 @@ function HomePage() {
   const [error, setError] = useState(null);
   const [days, setDays] = useState(7);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [commandTicker, setCommandTicker] = useState('');
   const searchInputRef = useRef(null);
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
+  const [searchParams] = useSearchParams();
 
   useKeyboardShortcuts({
     '/': () => { if (searchInputRef.current) searchInputRef.current.focus(); },
@@ -40,9 +45,11 @@ function HomePage() {
   });
 
   const handleSearch = async (ticker) => {
+    if (!ticker) return;
     setLoading(true);
     setError(null);
     setData(null);
+    setSentiment(null);
     try {
       const [predRes, sentRes] = await Promise.all([
         axios.post('http://localhost:5000/predict', { ticker, days }),
@@ -52,17 +59,38 @@ function HomePage() {
       setSentiment(sentRes.data);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Failed to fetch prediction. Ensure model is trained.');
+      setError(err.response?.data?.error || 'Failed to fetch prediction. Ensure the backend is running.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Re-fetch when days changes if a ticker is already loaded
+  useEffect(() => {
+    if (data?.ticker) {
+      handleSearch(data.ticker);
+    }
+  }, [days]);
+
+  // Auto-trigger from URL param ?ticker=SYM (e.g., from Watchlist Zap button)
+  useEffect(() => {
+    const tickerParam = searchParams.get('ticker');
+    if (tickerParam) {
+      setCommandTicker(tickerParam.toUpperCase());
+      handleSearch(tickerParam.toUpperCase());
+    }
+  }, []);
 
   const handleExportCSV = () => {
     if (data) {
       exportPredictionsToCSV(data, data.ticker);
       exportHistoricalToCSV(data.historical, data.ticker);
     }
+  };
+
+  const handleCommandSearch = (ticker) => {
+    setCommandTicker(ticker.toUpperCase());
+    handleSearch(ticker.toUpperCase());
   };
 
   const tickerStarred = data ? isInWatchlist(data.ticker) : false;
@@ -74,7 +102,7 @@ function HomePage() {
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
-        onSearch={handleSearch}
+        onSearch={handleCommandSearch}
         onExportCSV={handleExportCSV}
       />
 
@@ -109,7 +137,12 @@ function HomePage() {
           </Link>
         </motion.div>
 
-        <StockInput onSearch={handleSearch} loading={loading} inputRef={searchInputRef} />
+        <StockInput
+          onSearch={handleSearch}
+          loading={loading}
+          inputRef={searchInputRef}
+          externalTicker={commandTicker}
+        />
 
         {/* Day selector */}
         <div className="flex justify-center mb-8 gap-3">
@@ -197,6 +230,9 @@ function HomePage() {
                 />
               </div>
 
+              {/* Company Info Card */}
+              <StockInfoCard ticker={data.ticker} />
+
               {/* Chart + Sentiment */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mb-7">
                 <div className="lg:col-span-2">
@@ -272,6 +308,7 @@ function App() {
           <Route path="/learner/module/:moduleId" element={<ModulePage />} />
           <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
           <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
+          <Route path="/learner/simulator" element={<VirtualTradingPage />} />
         </Routes>
       </Router>
     </WatchlistProvider>

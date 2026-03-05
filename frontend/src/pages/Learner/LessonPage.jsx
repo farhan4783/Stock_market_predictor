@@ -4,6 +4,29 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, CheckCircle, BookOpen, Trophy } from 'lucide-react';
 import lessonsData from '../../data/lessons.json';
 
+const PROGRESS_KEY = 'neurostock-learner-progress';
+
+const updateProgress = (xpReward) => {
+    try {
+        const saved = localStorage.getItem(PROGRESS_KEY);
+        const progress = saved ? JSON.parse(saved) : {};
+        const newXp = (progress.xp || 0) + xpReward;
+        const newCompleted = (progress.completedLessons || 0) + 1;
+        const xpToNext = progress.xpToNextLevel || 500;
+        const newLevel = newXp >= xpToNext ? (progress.level || 1) + 1 : (progress.level || 1);
+        const newXpToNext = newXp >= xpToNext ? xpToNext + 300 : xpToNext;
+
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+            ...progress,
+            xp: newXp >= xpToNext ? newXp - xpToNext : newXp,
+            level: newLevel,
+            xpToNextLevel: newXpToNext,
+            completedLessons: newCompleted,
+            badges: (progress.badges || ['First Steps']),
+        }));
+    } catch { }
+};
+
 const LessonPage = () => {
     const { moduleId, lessonId } = useParams();
     const navigate = useNavigate();
@@ -11,18 +34,18 @@ const LessonPage = () => {
     const [completed, setCompleted] = useState(false);
 
     useEffect(() => {
-        // Find the lesson from JSON data
         const foundLesson = lessonsData.find(
             l => l.module === parseInt(moduleId) && l.lesson === parseInt(lessonId)
         );
         setLesson(foundLesson);
+        setCompleted(false);
     }, [moduleId, lessonId]);
 
     const handleComplete = () => {
         setCompleted(true);
-        // TODO: Save progress to backend
+        // Update XP and lesson count in localStorage
+        updateProgress(lesson.xp_reward);
         setTimeout(() => {
-            // Navigate to next lesson or quiz
             const nextLessonId = parseInt(lessonId) + 1;
             if (nextLessonId <= 5) {
                 navigate(`/learner/module/${moduleId}/lesson/${nextLessonId}`);
@@ -46,14 +69,14 @@ const LessonPage = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <Link
-                        to="/learner"
+                        to={`/learner/module/${moduleId}`}
                         className="inline-flex items-center gap-2 text-gray-400 hover:text-neon-blue transition-colors mb-4"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Dashboard
+                        Back to Module
                     </Link>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <p className="text-neon-blue text-sm font-medium mb-2">
                                 Module {lesson.module} • Lesson {lesson.lesson}
@@ -203,23 +226,29 @@ const LessonPage = () => {
                 <div className="flex justify-between items-center">
                     {parseInt(lessonId) > 1 ? (
                         <Link to={`/learner/module/${moduleId}/lesson/${parseInt(lessonId) - 1}`}>
-                            <button className="flex items-center gap-2 px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors">
+                            <motion.button
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                className="flex items-center gap-2 px-6 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
+                            >
                                 <ArrowLeft className="w-4 h-4" />
                                 Previous Lesson
-                            </button>
+                            </motion.button>
                         </Link>
                     ) : (
-                        <div></div>
+                        <div />
                     )}
 
                     {!completed ? (
-                        <button
+                        <motion.button
                             onClick={handleComplete}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-neon-blue to-neon-purple rounded-lg text-white font-bold hover:scale-105 transition-transform"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-neon-blue to-neon-purple rounded-lg text-white font-bold shadow-lg hover:shadow-cyan-500/30 transition-all"
                         >
-                            Complete Lesson
-                            <CheckCircle className="w-5 h-5" />
-                        </button>
+                            Mark Complete & Continue
+                            <ArrowRight className="w-5 h-5" />
+                        </motion.button>
                     ) : (
                         <motion.div
                             initial={{ scale: 0 }}

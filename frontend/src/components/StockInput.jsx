@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const POPULAR = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN'];
+const POPULAR = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'GOOGL', 'META'];
 
-const StockInput = ({ onSearch, loading, inputRef }) => {
+const StockInput = ({ onSearch, loading, inputRef, externalTicker }) => {
     const [ticker, setTicker] = useState('');
+
+    // Sync with external ticker (from URL param or CommandPalette)
+    useEffect(() => {
+        if (externalTicker && externalTicker !== ticker) {
+            setTicker(externalTicker);
+        }
+    }, [externalTicker]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -35,7 +42,7 @@ const StockInput = ({ onSearch, loading, inputRef }) => {
                             ref={inputRef}
                             type="text"
                             value={ticker}
-                            onChange={(e) => setTicker(e.target.value)}
+                            onChange={(e) => setTicker(e.target.value.toUpperCase())}
                             placeholder="Enter Stock Ticker (e.g., AAPL)"
                             className="w-full bg-transparent border-none outline-none text-white text-lg ml-4 placeholder-gray-500 uppercase font-mono tracking-wider"
                             disabled={loading}

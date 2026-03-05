@@ -30,6 +30,12 @@ const WatchlistPage = () => {
 
     const getPrice = (sym) => prices.find(p => p.symbol === sym) || null;
 
+    // Navigate to home with ticker as URL param so HomePage auto-triggers prediction
+    const handlePredict = (sym, e) => {
+        e.stopPropagation();
+        navigate(`/?ticker=${sym}`);
+    };
+
     return (
         <div className="min-h-screen text-white pt-20 pb-12 px-4">
             <div className="max-w-3xl mx-auto">
@@ -111,7 +117,7 @@ const WatchlistPage = () => {
                                             )}
                                             <div className="flex items-center gap-2">
                                                 <motion.button
-                                                    onClick={(e) => { e.stopPropagation(); navigate('/'); }}
+                                                    onClick={(e) => handlePredict(sym, e)}
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     className="p-2 rounded-lg bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 transition-all opacity-0 group-hover:opacity-100"

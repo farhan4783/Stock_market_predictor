@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TrendingUp, Star, GitCompare, Home } from 'lucide-react';
+import { TrendingUp, Star, GitCompare, Home, GraduationCap } from 'lucide-react';
 import { useWatchlist } from '../context/WatchlistContext';
 
 const NavBar = () => {
@@ -11,6 +11,7 @@ const NavBar = () => {
         { to: '/', label: 'Home', icon: Home },
         { to: '/watchlist', label: 'Watchlist', icon: Star, badge: watchlist.length },
         { to: '/compare', label: 'Compare', icon: GitCompare },
+        { to: '/learner', label: 'Learn', icon: GraduationCap },
     ];
 
     return (
@@ -32,7 +33,9 @@ const NavBar = () => {
                 {/* Nav Links */}
                 <div className="flex items-center gap-1">
                     {links.map(({ to, label, icon: Icon, badge }) => {
-                        const isActive = location.pathname === to;
+                        const isActive = to === '/'
+                            ? location.pathname === '/'
+                            : location.pathname.startsWith(to);
                         return (
                             <Link key={to} to={to}>
                                 <motion.div
