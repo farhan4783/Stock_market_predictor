@@ -8,17 +8,17 @@ All broken features have been fixed and new features have been added to the NEUR
 
 ## Screenshots
 
-![Home Page](file:///C:/Users/FARAZ%20KHAN/.gemini/antigravity/brain/4516af25-7beb-4de5-b56c-aa5fe9e65786/home_page_initial_1772732470500.png)
+![Home Page](C:\Users\FARAZ KHAN\Desktop\DEKSTOP\PROJECTS\stock_market prediction\home_page_initial_1772732470500.png)
 *Home page: NavBar with Home, Watchlist, Compare, Learn. Search bar with popular stock pills. Day selector (3d/7d/14d/30d).*
 
-![Learner Dashboard](file:///C:/Users/FARAZ%20KHAN/.gemini/antigravity/brain/4516af25-7beb-4de5-b56c-aa5fe9e65786/learner_dashboard_top_1772732539025.png)
+![Learner Dashboard](C:\Users\FARAZ KHAN\Desktop\DEKSTOP\PROJECTS\stock_market prediction\learner_dashboard_top_1772732539025.png)
 *Learner Dashboard: XP progress bars, Module 1 (Stock Market Basics) unlocked, Modules 2 & 3 locked.*
 
 ---
 
 ## 🎬 Browser Recording
 
-![Full verification recording](file:///C:/Users/FARAZ%20KHAN/.gemini/antigravity/brain/4516af25-7beb-4de5-b56c-aa5fe9e65786/neurostock_full_verification_1772732430111.webp)
+![Full verification recording](C:\Users\FARAZ KHAN\Desktop\DEKSTOP\PROJECTS\stock_market prediction\neurostock_full_verification_1772732430111.webp)
 
 ---
 
