@@ -21,11 +21,18 @@ import QuizPage from './pages/Learner/QuizPage';
 import VirtualTradingPage from './pages/Learner/VirtualTradingPage';
 import WatchlistPage from './pages/WatchlistPage';
 import ComparePage from './pages/ComparePage';
+import PortfolioPage from './pages/PortfolioPage';
+import NewsPage from './pages/NewsPage';
+import ScreenerPage from './pages/ScreenerPage';
+import HeatmapPage from './pages/HeatmapPage';
 import { WatchlistProvider, useWatchlist } from './context/WatchlistContext';
+import { PortfolioProvider } from './context/PortfolioContext';
 import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap, Star } from 'lucide-react';
 import { exportPredictionsToCSV, exportHistoricalToCSV } from './utils/exportCSV';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { Link } from 'react-router-dom';
+import TopMovers from './components/TopMovers';
+import AIInsightPanel from './components/AIInsightPanel';
 
 function HomePage() {
   const [loading, setLoading] = useState(false);
@@ -137,6 +144,8 @@ function HomePage() {
           </Link>
         </motion.div>
 
+        <TopMovers />
+
         <StockInput
           onSearch={handleSearch}
           loading={loading}
@@ -230,6 +239,12 @@ function HomePage() {
                 />
               </div>
 
+              <AIInsightPanel
+                ticker={data.ticker}
+                predictions={data.predictions}
+                metadata={data.metadata}
+              />
+
               {/* Company Info Card */}
               <StockInfoCard ticker={data.ticker} />
 
@@ -297,21 +312,27 @@ function HomePage() {
 
 function App() {
   return (
-    <WatchlistProvider>
-      <Router>
-        <NavBar />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/watchlist" element={<WatchlistPage />} />
-          <Route path="/compare" element={<ComparePage />} />
-          <Route path="/learner" element={<LearnerDashboard />} />
-          <Route path="/learner/module/:moduleId" element={<ModulePage />} />
-          <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
-          <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
-          <Route path="/learner/simulator" element={<VirtualTradingPage />} />
-        </Routes>
-      </Router>
-    </WatchlistProvider>
+    <PortfolioProvider>
+      <WatchlistProvider>
+        <Router>
+          <NavBar />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
+            <Route path="/watchlist" element={<WatchlistPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/screener" element={<ScreenerPage />} />
+            <Route path="/heatmap" element={<HeatmapPage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/learner" element={<LearnerDashboard />} />
+            <Route path="/learner/module/:moduleId" element={<ModulePage />} />
+            <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
+            <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
+            <Route path="/learner/simulator" element={<VirtualTradingPage />} />
+          </Routes>
+        </Router>
+      </WatchlistProvider>
+    </PortfolioProvider>
   );
 }
 

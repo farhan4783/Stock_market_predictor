@@ -29,6 +29,7 @@ const ComparePage = () => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
+    const [viewMode, setViewMode] = useState('price'); // 'price' or 'percent'
 
     const handleCompare = async () => {
         setLoading(true);
@@ -60,7 +61,7 @@ const ComparePage = () => {
             ...t2.predictions.map(d => d.date),
         ])].sort();
 
-        return allDates.map(date => {
+        let formattedData = allDates.map(date => {
             const h1 = t1.historical.find(d => d.date === date);
             const h2 = t2.historical.find(d => d.date === date);
             const p1 = t1.predictions.find(d => d.date === date);
@@ -72,6 +73,19 @@ const ComparePage = () => {
                 isPred: !h1 && !h2,
             };
         });
+
+        if (viewMode === 'percent' && formattedData.length > 0) {
+            const first1 = formattedData.find(d => d[t1.ticker] !== null)?.[t1.ticker];
+            const first2 = formattedData.find(d => d[t2.ticker] !== null)?.[t2.ticker];
+
+            formattedData = formattedData.map(d => ({
+                ...d,
+                [t1.ticker]: d[t1.ticker] !== null ? ((d[t1.ticker] - first1) / first1) * 100 : null,
+                [t2.ticker]: d[t2.ticker] !== null ? ((d[t2.ticker] - first2) / first2) * 100 : null,
+            }));
+        }
+
+        return formattedData;
     };
 
     const chartData = buildChartData();
@@ -163,14 +177,23 @@ const ComparePage = () => {
                                     const isPos = lastPred.change_percent >= 0;
                                     const colors = ['from-cyan-500/20 to-cyan-500/5 border-cyan-500/30', 'from-purple-500/20 to-purple-500/5 border-purple-500/30'];
                                     const textColors = ['text-cyan-400', 'text-purple-400'];
+
+                                    const otherT = idx === 0 ? data.ticker2 : data.ticker1;
+                                    const isWinner = lastPred.change_percent > otherT.predictions[otherT.predictions.length - 1].change_percent;
+
                                     return (
                                         <motion.div
                                             key={t.ticker}
                                             initial={{ y: 20, opacity: 0 }}
                                             animate={{ y: 0, opacity: 1 }}
                                             transition={{ delay: idx * 0.1 }}
-                                            className={`bg-gradient-to-br ${colors[idx]} border rounded-xl p-5`}
+                                            className={`bg-gradient-to-br ${colors[idx]} border rounded-xl p-5 relative overflow-hidden`}
                                         >
+                                            {isWinner && (
+                                                <div className="absolute -right-6 top-4 bg-yellow-400 text-black text-[10px] font-black uppercase tracking-widest py-1 px-8 rotate-45 shadow-lg shadow-yellow-400/20">
+                                                    Winner
+                                                </div>
+                                            )}
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className={`text-2xl font-black font-mono ${textColors[idx]}`}>{t.ticker}</span>
                                                 <span className={`flex items-center gap-1 text-sm font-bold ${isPos ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -207,10 +230,26 @@ const ComparePage = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-white/5 p-6"
                             >
-                                <h3 className="text-lg font-bold mb-4 text-white flex items-center gap-2">
-                                    <span className="w-1 h-5 bg-gradient-to-b from-cyan-400 to-purple-400 rounded-full" />
-                                    Price Trajectories
-                                </h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <span className="w-1 h-5 bg-gradient-to-b from-cyan-400 to-purple-400 rounded-full" />
+                                        Performance Trajectories
+                                    </h3>
+                                    <div className="flex bg-white/5 p-1 rounded-lg">
+                                        <button
+                                            onClick={() => setViewMode('price')}
+                                            className={`px-3 py-1 rounded text-xs font-bold transition-all ${viewMode === 'price' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                                        >
+                                            Price ($)
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('percent')}
+                                            className={`px-3 py-1 rounded text-xs font-bold transition-all ${viewMode === 'percent' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                                        >
+                                            Relative (%)
+                                        </button>
+                                    </div>
+                                </div>
                                 <ResponsiveContainer width="100%" height={350}>
                                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                         <defs>
@@ -228,7 +267,7 @@ const ComparePage = () => {
                                             tickFormatter={s => { const d = new Date(s); return `${d.getMonth() + 1}/${d.getDate()}`; }}
                                             minTickGap={20}
                                         />
-                                        <YAxis stroke="#444" tick={{ fontSize: 10 }} tickFormatter={v => `$${v.toFixed(0)}`} width={55} />
+                                        <YAxis stroke="#444" tick={{ fontSize: 10 }} tickFormatter={v => viewMode === 'percent' ? `${v.toFixed(0)}%` : `$${v.toFixed(0)}`} width={55} />
                                         <Tooltip content={<CompareTooltip />} />
                                         <Legend />
                                         <Area type="monotone" dataKey={data.ticker1.ticker} stroke="#00f3ff" strokeWidth={2} fill="url(#g1)" connectNulls />

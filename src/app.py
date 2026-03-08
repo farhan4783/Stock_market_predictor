@@ -268,6 +268,172 @@ def stock_info():
         return jsonify({'error': str(e)}), 400
 
 
+@app.route('/top-movers', methods=['GET'])
+def top_movers():
+    """Returns top 5 gainers & losers from a curated list."""
+    symbols = ['AAPL', 'MSFT', 'NVDA', 'TSLA', 'AMZN', 'META', 'GOOGL', 'NFLX', 'AMD', 'SPY', 
+               'QQQ', 'DIA', 'BTC-USD', 'ETH-USD', 'COIN', 'PLTR', 'SNOW', 'CRWD', 'PANW', 'SMCI']
+    results = []
+    try:
+        for sym in symbols:
+            try:
+                t = yf.Ticker(sym)
+                info = t.fast_info
+                current = float(info.last_price) if info.last_price else 0.0
+                prev_close = float(info.previous_close) if info.previous_close else current
+                if prev_close > 0:
+                    change_pct = ((current - prev_close) / prev_close) * 100
+                    results.append({
+                        "symbol": sym,
+                        "price": round(current, 2),
+                        "change_percent": round(change_pct, 2)
+                    })
+            except Exception:
+                continue
+        # sort and get top gainers and losers
+        results.sort(key=lambda x: x['change_percent'], reverse=True)
+        return jsonify({
+            "gainers": results[:5],
+            "losers": results[-5:][::-1]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/news', methods=['GET'])
+def news():
+    """Returns latest headlines for a ticker, defaulting to general market if not provided."""
+    ticker = request.args.get('ticker', 'SPY').upper()
+    try:
+        from sentiment import get_market_sentiment
+        sentiment_data = get_market_sentiment(ticker)
+        return jsonify(sentiment_data.get('news', []))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/technical-analysis', methods=['GET'])
+def technical_analysis():
+    """Returns Bollinger Bands, RSI, MACD, support/resistance for a ticker."""
+    ticker = request.args.get('ticker', 'AAPL').upper()
+    try:
+        df = yf.download(ticker, period="6mo", progress=False)
+        if df.empty:
+            return jsonify({"error": "No data found"}), 404
+            
+        close = df['Close'].squeeze()
+        
+        # RSI
+        delta = close.diff()
+        gain = delta.clip(lower=0).rolling(14).mean()
+        loss = (-delta.clip(upper=0)).rolling(14).mean()
+        rs = gain / (loss + 1e-10)
+        rsi = 100 - (100 / (1 + rs))
+        
+        # MACD
+        ema12 = close.ewm(span=12, adjust=False).mean()
+        ema26 = close.ewm(span=26, adjust=False).mean()
+        macd = ema12 - ema26
+        signal = macd.ewm(span=9, adjust=False).mean()
+        hist = macd - signal
+        
+        # Bollinger Bands
+        sma20 = close.rolling(20).mean()
+        std20 = close.rolling(20).std()
+        upper_bb = sma20 + (std20 * 2)
+        lower_bb = sma20 - (std20 * 2)
+        
+        # Support/Resistance approx (min/max of last 3 months)
+        recent = close.tail(60)
+        support = recent.min()
+        resistance = recent.max()
+        
+        return jsonify({
+            "ticker": ticker,
+            "rsi": round(float(rsi.iloc[-1]), 2),
+            "macd": round(float(macd.iloc[-1]), 2),
+            "macd_signal": round(float(signal.iloc[-1]), 2),
+            "macd_hist": round(float(hist.iloc[-1]), 2),
+            "bb_upper": round(float(upper_bb.iloc[-1]), 2),
+            "bb_lower": round(float(lower_bb.iloc[-1]), 2),
+            "bb_mid": round(float(sma20.iloc[-1]), 2),
+            "support": round(float(support), 2),
+            "resistance": round(float(resistance), 2),
+            "current_price": round(float(close.iloc[-1]), 2)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/historical-range', methods=['GET'])
+def historical_range():
+    """Returns OHLCV data for custom date range."""
+    ticker = request.args.get('ticker', 'AAPL').upper()
+    start = request.args.get('start')
+    end = request.args.get('end')
+    period = request.args.get('period', '1mo')
+    
+    try:
+        if start and end:
+            df = yf.download(ticker, start=start, end=end, progress=False)
+        else:
+            df = yf.download(ticker, period=period, progress=False)
+            
+        if df.empty:
+            return jsonify([])
+            
+        result = []
+        for idx, row in df.iterrows():
+            date_val = idx
+            if isinstance(date_val, pd.Series):
+                date_val = date_val.iloc[0]
+                
+            result.append({
+                "date": pd.to_datetime(date_val).strftime('%Y-%m-%d'),
+                "open": float(row['Open'].iloc[0]) if isinstance(row['Open'], pd.Series) else float(row['Open']),
+                "high": float(row['High'].iloc[0]) if isinstance(row['High'], pd.Series) else float(row['High']),
+                "low": float(row['Low'].iloc[0]) if isinstance(row['Low'], pd.Series) else float(row['Low']),
+                "close": float(row['Close'].iloc[0]) if isinstance(row['Close'], pd.Series) else float(row['Close']),
+                "volume": int(row['Volume'].iloc[0]) if isinstance(row['Volume'], pd.Series) else int(row['Volume'])
+            })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/screener', methods=['GET'])
+def screener():
+    """Filters a curated stock list by basic metrics."""
+    # List of 15 mega/large-cap stocks to quickly screen
+    symbols = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'BRK-B', 'LLY', 'AVGO', 'JPM', 'TSLA', 'WMT', 'UNH', 'V', 'XOM']
+    results = []
+    try:
+        for sym in symbols:
+            try:
+                t = yf.Ticker(sym)
+                info = t.info or {}
+                results.append({
+                    "ticker": sym,
+                    "name": info.get('shortName', sym),
+                    "sector": info.get('sector', 'N/A'),
+                    "price": round(float(info.get('currentPrice', 0)), 2) if info.get('currentPrice') else 0,
+                    "pe": round(float(info.get('trailingPE', 0)), 2) if info.get('trailingPE') else None,
+                    "marketCap": info.get('marketCap'),
+                    "dividendYield": round(float(info.get('dividendYield', 0)) * 100, 2) if info.get('dividendYield') else 0
+                })
+            except Exception:
+                continue
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/portfolio-prices', methods=['POST'])
+def portfolio_prices():
+    """Batch fetch current prices for a list of portfolio tickers. Identical to watchlist_prices."""
+    return watchlist_prices()
+
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy"})

@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useWatchlist } from '../context/WatchlistContext';
-import { Star, X, TrendingUp, TrendingDown, RefreshCw, Zap } from 'lucide-react';
+import { usePortfolio } from '../context/PortfolioContext';
+import { Star, X, TrendingUp, TrendingDown, RefreshCw, Zap, Briefcase } from 'lucide-react';
 import axios from 'axios';
+import MiniSparkline from '../components/MiniSparkline';
 
 const WatchlistPage = () => {
     const { watchlist, removeFromWatchlist } = useWatchlist();
+    const { addHolding } = usePortfolio();
     const [prices, setPrices] = useState([]);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -107,6 +110,10 @@ const WatchlistPage = () => {
                                             </div>
                                         </div>
 
+                                        <div className="hidden sm:block">
+                                            <MiniSparkline ticker={sym} />
+                                        </div>
+
                                         <div className="flex items-center gap-4">
                                             {p ? (
                                                 <div className="text-right">
@@ -116,6 +123,15 @@ const WatchlistPage = () => {
                                                 <div className="w-20 h-6 bg-white/5 rounded animate-pulse" />
                                             )}
                                             <div className="flex items-center gap-2">
+                                                <motion.button
+                                                    onClick={(e) => { e.stopPropagation(); navigate('/portfolio'); addHolding(sym, 1, p?.price || 0); }}
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    className="p-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Add to Portfolio (1 share)"
+                                                >
+                                                    <Briefcase className="w-4 h-4" />
+                                                </motion.button>
                                                 <motion.button
                                                     onClick={(e) => handlePredict(sym, e)}
                                                     whileHover={{ scale: 1.1 }}
