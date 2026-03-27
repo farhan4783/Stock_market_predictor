@@ -63,6 +63,35 @@
 
 ---
 
+## ⚖️ 5. Comparison Mode
+**Location**: Top Navigation Bar -> "Compare"
+
+**Features**:
+- Side-by-side comparison of any two valid stock tickers
+- Overlay charts mapping prediction trajectories on top of each other
+- Comparative stat cards analyzing each stock's predictive advantage
+
+---
+
+## 🎯 6. Prediction Confidence Score
+**Location**: Home Page -> Stats Card 4 (rightmost)
+
+**Features**:
+- Automatically scales and translates Model Error (MAE) into a highly readable Confidence %
+- Dynamic rendering that adapts alongside standard metrics
+
+---
+
+## 📈 7. Historical Accuracy Tracker
+**Location**: Below Company Info Card on Home Page
+
+**Features**:
+- 30-day historical backtesting of the AI model
+- Computes mean absolute error tracking how closely the model mirrored actual movements historically
+- Dual-line visualization via Recharts combining actual vs predicted behavior
+
+---
+
 ## 🎯 Quick Start Guide
 
 ### Starting the Application
@@ -107,9 +136,7 @@ npm run dev
 
 ## 🚀 Next Quick Wins to Implement
 
-1. **Comparison Mode** - Compare 2 stocks side-by-side
-2. **Prediction Confidence Score** - Show AI confidence %
-3. **Historical Accuracy Tracker** - Track how accurate past predictions were
+*All previously tracked Quick Wins have now been implemented! Check back later for more.*
 
 ---
 

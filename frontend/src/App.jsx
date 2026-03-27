@@ -27,12 +27,13 @@ import ScreenerPage from './pages/ScreenerPage';
 import HeatmapPage from './pages/HeatmapPage';
 import { WatchlistProvider, useWatchlist } from './context/WatchlistContext';
 import { PortfolioProvider } from './context/PortfolioContext';
-import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap, Star } from 'lucide-react';
+import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap, Star, Target } from 'lucide-react';
 import { exportPredictionsToCSV, exportHistoricalToCSV } from './utils/exportCSV';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { Link } from 'react-router-dom';
 import TopMovers from './components/TopMovers';
 import AIInsightPanel from './components/AIInsightPanel';
+import HistoricalAccuracyTracker from './components/HistoricalAccuracyTracker';
 
 function HomePage() {
   const [loading, setLoading] = useState(false);
@@ -216,7 +217,7 @@ function HomePage() {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
                 <StatsCard
                   label="Current Price"
                   value={`$${data.current_price.toFixed(2)}`}
@@ -237,6 +238,12 @@ function HomePage() {
                   icon={Activity}
                   delay={0.3}
                 />
+                <StatsCard
+                  label="AI Confidence"
+                  value={`${Math.max(0, 100 - (data.metadata.test_mae * 100)).toFixed(1)}%`}
+                  icon={Target}
+                  delay={0.4}
+                />
               </div>
 
               <AIInsightPanel
@@ -247,6 +254,11 @@ function HomePage() {
 
               {/* Company Info Card */}
               <StockInfoCard ticker={data.ticker} />
+
+              {/* Historical Accuracy Tracker */}
+              {data.backtest && data.backtest.length > 0 && (
+                <HistoricalAccuracyTracker backtestData={data.backtest} />
+              )}
 
               {/* Chart + Sentiment */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mb-7">
