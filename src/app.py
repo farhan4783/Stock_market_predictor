@@ -123,11 +123,43 @@ def get_prediction_data(ticker, days_ahead):
                 "volume": int(row['Volume']) if not isinstance(row['Volume'], pd.Series) else int(row['Volume'].iloc[0])
             })
 
+        # Backtesting for Historical Accuracy Tracker (Last 30 days)
+        backtest_len = min(30, len(scaled_data) - sequence_length)
+        backtest_data = []
+        
+        if backtest_len > 0:
+            X_back = []
+            for i in range(backtest_len, 0, -1):
+                X_back.append(scaled_data[-(sequence_length + i) : -i])
+            X_back = np.array(X_back)
+            
+            back_preds_scaled = model.predict(X_back, verbose=0)
+            back_preds_orig = inverse_transform_predictions(back_preds_scaled.flatten(), scaler, num_features)
+            
+            actual_closes = df['Close'].values[-backtest_len:]
+            dates_back = df['Date'].values[-backtest_len:]
+            
+            for i in range(backtest_len):
+                d_val = dates_back[i]
+                if isinstance(d_val, pd.Series):
+                    d_val = d_val.iloc[0]
+                
+                actual_val = actual_closes[i]
+                if isinstance(actual_val, pd.Series):
+                    actual_val = actual_val.iloc[0]
+                    
+                backtest_data.append({
+                    "date": pd.to_datetime(d_val).strftime('%Y-%m-%d'),
+                    "predicted": float(back_preds_orig[i]),
+                    "actual": float(actual_val)
+                })
+
         return {
             "ticker": ticker,
             "current_price": current_price,
             "predictions": future_data,
             "historical": historical_data,
+            "backtest": backtest_data,
             "metadata": metadata
         }, None
 
