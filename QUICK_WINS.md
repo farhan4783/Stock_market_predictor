@@ -177,3 +177,33 @@ The `@tailwind` warnings in `index.css` are **expected and safe to ignore**. The
 ---
 
 **Enjoy the new features! 🎉**
+
+
+
+
+I have completed the massive NeuroStock V2 Upgrade! The project now features robust intelligence and strategy algorithms that take it far beyond a simple dashboard.
+
+Here is a summary of the incredible new features you can test right now:
+
+NeuroChat: The AI Financial Analyst
+
+I built a NeuroChat.jsx floating terminal component and integrated it globally into the app (App.jsx).
+The Python backend in app.py has a new /chat endpoint that naturally parses your questions (e.g., "predict MSFT," "what is the RSI for AAPL?") and generates precise, data-driven responses without relying on external API keys.
+Algorithmic Strategy Builder & Backtesting Engine
+
+A dedicated /strategy builder page where you can design your own trading rules (e.g., Buy when RSI < 30) using an interactive dropdown UI.
+The backend runs a lightning-fast 1-year historical backtest simulating your initial capital against the rules, returning detailed ROI metrics, a portfolio growth timeline chart, and an extensive execution ledger.
+Advanced Technical Overlays
+
+The main PredictionChart.jsx now features an "Advanced Mode" toggle.
+Flipping this switch will dynamically draw a 20-Day Simple Moving Average (SMA) and Bollinger Bands directly on top of the price forecasts.
+It also automatically slides open two distinct technical subcharts beneath the main graph: RSI (14) Oscillator with built-in 30/70 highlight lines, and a MACD Histogram that color-codes bullish vs. bearish momentum.
+"V2" UI/UX Cyberpunk Polish
+
+Redesigned Background.jsx to feature an animated pseudo-3D scanning grid using geometric CSS gradients beneath the Three.js starfield.
+Added pulsing neon orbs to enhance ambient depth, making the entire platform look breathtaking.
+TIP
+
+Go ahead and fire up both the Flask backend (python src/app.py) and Vite frontend (npm run dev) to experience the new features. Try clicking the glowing chat bubble in the bottom right corner, or navigate to "Strategy" in the navbar to test your trading ideas!
+
+I've documented all these changes in the Walkthrough artifact. Let me know if you would like me to adjust the styling of the Advanced Charts, customize the NeuroChat responses further, or add any other modules!
