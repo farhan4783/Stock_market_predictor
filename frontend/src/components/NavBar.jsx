@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, Star, GitCompare, Home, GraduationCap, Briefcase, Newspaper, Filter, LayoutGrid, Menu, X } from 'lucide-react';
+import { TrendingUp, Star, GitCompare, Home, GraduationCap, Briefcase, Newspaper, Filter, LayoutGrid, Menu, X, Activity } from 'lucide-react';
 import { useWatchlist } from '../context/WatchlistContext';
 
 const NavBar = () => {
@@ -17,6 +17,7 @@ const NavBar = () => {
         { to: '/screener', label: 'Screener', icon: Filter },
         { to: '/heatmap', label: 'Heatmap', icon: LayoutGrid },
         { to: '/compare', label: 'Compare', icon: GitCompare },
+        { to: '/strategy', label: 'Strategy', icon: Activity },
         { to: '/learner', label: 'Learn', icon: GraduationCap },
     ];
 

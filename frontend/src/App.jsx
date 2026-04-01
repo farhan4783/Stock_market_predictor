@@ -25,6 +25,7 @@ import PortfolioPage from './pages/PortfolioPage';
 import NewsPage from './pages/NewsPage';
 import ScreenerPage from './pages/ScreenerPage';
 import HeatmapPage from './pages/HeatmapPage';
+import StrategyBuilderPage from './pages/StrategyBuilderPage';
 import { WatchlistProvider, useWatchlist } from './context/WatchlistContext';
 import { PortfolioProvider } from './context/PortfolioContext';
 import { TrendingUp, DollarSign, Activity, AlertCircle, Download, GraduationCap, Star, Target } from 'lucide-react';
@@ -34,6 +35,35 @@ import { Link } from 'react-router-dom';
 import TopMovers from './components/TopMovers';
 import AIInsightPanel from './components/AIInsightPanel';
 import HistoricalAccuracyTracker from './components/HistoricalAccuracyTracker';
+import NeuroChat from './components/NeuroChat';
+
+function App() {
+  return (
+    <PortfolioProvider>
+      <WatchlistProvider>
+        <Router>
+          <NavBar />
+          <NeuroChat />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
+            <Route path="/watchlist" element={<WatchlistPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/screener" element={<ScreenerPage />} />
+            <Route path="/heatmap" element={<HeatmapPage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/strategy" element={<StrategyBuilderPage />} />
+            <Route path="/learner" element={<LearnerDashboard />} />
+            <Route path="/learner/module/:moduleId" element={<ModulePage />} />
+            <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
+            <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
+            <Route path="/learner/simulator" element={<VirtualTradingPage />} />
+          </Routes>
+        </Router>
+      </WatchlistProvider>
+    </PortfolioProvider>
+  );
+}
 
 function HomePage() {
   const [loading, setLoading] = useState(false);
@@ -322,30 +352,6 @@ function HomePage() {
   );
 }
 
-function App() {
-  return (
-    <PortfolioProvider>
-      <WatchlistProvider>
-        <Router>
-          <NavBar />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/portfolio" element={<PortfolioPage />} />
-            <Route path="/watchlist" element={<WatchlistPage />} />
-            <Route path="/news" element={<NewsPage />} />
-            <Route path="/screener" element={<ScreenerPage />} />
-            <Route path="/heatmap" element={<HeatmapPage />} />
-            <Route path="/compare" element={<ComparePage />} />
-            <Route path="/learner" element={<LearnerDashboard />} />
-            <Route path="/learner/module/:moduleId" element={<ModulePage />} />
-            <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
-            <Route path="/learner/module/:moduleId/quiz" element={<QuizPage />} />
-            <Route path="/learner/simulator" element={<VirtualTradingPage />} />
-          </Routes>
-        </Router>
-      </WatchlistProvider>
-    </PortfolioProvider>
-  );
-}
+
 
 export default App;
