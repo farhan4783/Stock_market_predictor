@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import axios from 'axios';
 
 export default function NeuroChat() {
@@ -10,10 +10,24 @@ export default function NeuroChat() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const messagesEndRef = useRef(null);
   
   // Default ticker, ideally we'd pull this from a global context or search bar
   const [currentTicker, setCurrentTicker] = useState('AAPL');
+
+  const speak = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Clean up text before speaking (remove asterisks or formatting)
+      const cleanText = text.replace(/[*#]/g, '');
+      utterance.text = cleanText;
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -63,6 +77,10 @@ export default function NeuroChat() {
       });
       
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.response }]);
+      
+      if (isAudioEnabled) {
+          speak(res.data.response);
+      }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Neural connection severed. Please ensure the backend is running.' }]);
     } finally {
@@ -110,12 +128,21 @@ export default function NeuroChat() {
                   <p className="text-xs text-neon-blue/70 m-0 mt-0.5">Context: {currentTicker}</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                  className={`p-1.5 rounded-md transition-colors ${isAudioEnabled ? 'text-neon-blue bg-neon-blue/10' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}
+                  title={isAudioEnabled ? 'Disable Audio' : 'Enable Audio'}
+                >
+                  {isAudioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}

@@ -35,15 +35,21 @@ import { Link } from 'react-router-dom';
 import TopMovers from './components/TopMovers';
 import AIInsightPanel from './components/AIInsightPanel';
 import HistoricalAccuracyTracker from './components/HistoricalAccuracyTracker';
-import NeuroChat from './components/NeuroChat';
+import GlobalMarketPage from './pages/GlobalMarketPage';
+import WhaleTracker from './components/WhaleTracker';
+import BootSequence from './components/BootSequence';
 
 function App() {
+  const [showBootSequence, setShowBootSequence] = useState(true);
+
   return (
     <PortfolioProvider>
       <WatchlistProvider>
+        {showBootSequence && <BootSequence onComplete={() => setShowBootSequence(false)} />}
         <Router>
           <NavBar />
           <NeuroChat />
+          {!showBootSequence && <WhaleTracker />}
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
@@ -53,6 +59,7 @@ function App() {
             <Route path="/heatmap" element={<HeatmapPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/strategy" element={<StrategyBuilderPage />} />
+            <Route path="/global" element={<GlobalMarketPage />} />
             <Route path="/learner" element={<LearnerDashboard />} />
             <Route path="/learner/module/:moduleId" element={<ModulePage />} />
             <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
