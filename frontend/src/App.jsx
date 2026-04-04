@@ -36,8 +36,10 @@ import TopMovers from './components/TopMovers';
 import AIInsightPanel from './components/AIInsightPanel';
 import HistoricalAccuracyTracker from './components/HistoricalAccuracyTracker';
 import GlobalMarketPage from './pages/GlobalMarketPage';
+import TradingBotPage from './pages/TradingBotPage';
 import WhaleTracker from './components/WhaleTracker';
 import BootSequence from './components/BootSequence';
+import NewsSentimentTicker from './components/NewsSentimentTicker';
 
 function App() {
   const [showBootSequence, setShowBootSequence] = useState(true);
@@ -49,7 +51,12 @@ function App() {
         <Router>
           <NavBar />
           <NeuroChat />
-          {!showBootSequence && <WhaleTracker />}
+          {!showBootSequence && (
+            <>
+              <WhaleTracker />
+              <NewsSentimentTicker />
+            </>
+          )}
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
@@ -59,6 +66,7 @@ function App() {
             <Route path="/heatmap" element={<HeatmapPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/strategy" element={<StrategyBuilderPage />} />
+            <Route path="/bot" element={<TradingBotPage />} />
             <Route path="/global" element={<GlobalMarketPage />} />
             <Route path="/learner" element={<LearnerDashboard />} />
             <Route path="/learner/module/:moduleId" element={<ModulePage />} />

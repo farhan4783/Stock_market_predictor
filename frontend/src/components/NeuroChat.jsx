@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Bot, User, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Sparkles, Volume2, VolumeX, Mic } from 'lucide-react';
 import axios from 'axios';
 
 export default function NeuroChat() {
@@ -11,7 +11,9 @@ export default function NeuroChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
   
   // Default ticker, ideally we'd pull this from a global context or search bar
   const [currentTicker, setCurrentTicker] = useState('AAPL');
@@ -38,6 +40,60 @@ export default function NeuroChat() {
         scrollToBottom();
     }
   }, [messages, loading, isOpen]);
+
+  useEffect(() => {
+    // Initialize speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {}
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch (e) {}
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        setIsListening(true);
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        alert("Speech recognition is not supported in this browser.");
+      }
+    }
+  };
 
   const extractTicker = (text) => {
     const words = text.split(' ');
@@ -193,8 +249,16 @@ export default function NeuroChat() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask Neuro..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-neon-blue/50 focus:ring-1 focus:ring-neon-blue/50 transition-all font-light"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-4 pr-20 text-sm text-white focus:outline-none focus:border-neon-blue/50 focus:ring-1 focus:ring-neon-blue/50 transition-all font-light"
                 />
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  className={`absolute right-10 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors ${isListening ? 'text-red-500 animate-pulse bg-red-500/10' : 'text-gray-400 hover:text-neon-blue hover:bg-neon-blue/10'}`}
+                  title="Enable Copilot Voice"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
                 <button 
                   type="submit"
                   disabled={!input.trim() || loading}
