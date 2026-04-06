@@ -40,6 +40,10 @@ import TradingBotPage from './pages/TradingBotPage';
 import WhaleTracker from './components/WhaleTracker';
 import BootSequence from './components/BootSequence';
 import NewsSentimentTicker from './components/NewsSentimentTicker';
+import AIAgentSwarm from './components/AIAgentSwarm';
+import OptionsVisualizerPage from './pages/OptionsVisualizerPage';
+import MacroHUD from './components/MacroHUD';
+import SentimentHexGrid from './components/SentimentHexGrid';
 
 function App() {
   const [showBootSequence, setShowBootSequence] = useState(true);
@@ -54,6 +58,7 @@ function App() {
           {!showBootSequence && (
             <>
               <WhaleTracker />
+              <MacroHUD />
               <NewsSentimentTicker />
             </>
           )}
@@ -68,6 +73,7 @@ function App() {
             <Route path="/strategy" element={<StrategyBuilderPage />} />
             <Route path="/bot" element={<TradingBotPage />} />
             <Route path="/global" element={<GlobalMarketPage />} />
+            <Route path="/options" element={<OptionsVisualizerPage />} />
             <Route path="/learner" element={<LearnerDashboard />} />
             <Route path="/learner/module/:moduleId" element={<ModulePage />} />
             <Route path="/learner/module/:moduleId/lesson/:lessonId" element={<LessonPage />} />
@@ -297,6 +303,13 @@ function HomePage() {
                 metadata={data.metadata}
               />
 
+              <AIAgentSwarm
+                ticker={data.ticker}
+                predictions={data.predictions}
+                metadata={data.metadata}
+                sentiment={sentiment}
+              />
+
               {/* Company Info Card */}
               <StockInfoCard ticker={data.ticker} />
 
@@ -310,16 +323,19 @@ function HomePage() {
                 <div className="lg:col-span-2">
                   <PredictionChart data={data.historical} predictions={data.predictions} />
                 </div>
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 flex flex-col gap-5">
                   {sentiment && (
-                    <SentimentGauge
-                      score={sentiment.score}
-                      label={sentiment.label}
-                      color={sentiment.color}
-                      news={sentiment.news}
-                      rsi={sentiment.rsi}
-                      trend={sentiment.trend}
-                    />
+                    <>
+                      <SentimentGauge
+                        score={sentiment.score}
+                        label={sentiment.label}
+                        color={sentiment.color}
+                        news={sentiment.news}
+                        rsi={sentiment.rsi}
+                        trend={sentiment.trend}
+                      />
+                      <SentimentHexGrid score={sentiment.score} />
+                    </>
                   )}
                 </div>
               </div>
