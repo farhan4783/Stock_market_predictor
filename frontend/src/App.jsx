@@ -44,6 +44,8 @@ import AIAgentSwarm from './components/AIAgentSwarm';
 import OptionsVisualizerPage from './pages/OptionsVisualizerPage';
 import MacroHUD from './components/MacroHUD';
 import SentimentHexGrid from './components/SentimentHexGrid';
+import CorrelationMatrix from './components/CorrelationMatrix';
+import RawDataStream from './components/RawDataStream';
 
 function App() {
   const [showBootSequence, setShowBootSequence] = useState(true);
@@ -60,6 +62,7 @@ function App() {
               <WhaleTracker />
               <MacroHUD />
               <NewsSentimentTicker />
+              <RawDataStream />
             </>
           )}
           <Routes>
@@ -317,6 +320,11 @@ function HomePage() {
               {data.backtest && data.backtest.length > 0 && (
                 <HistoricalAccuracyTracker backtestData={data.backtest} />
               )}
+
+              {/* Quantum Correlation Matrix */}
+              <div className="mb-7">
+                <CorrelationMatrix />
+              </div>
 
               {/* Chart + Sentiment */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mb-7">
